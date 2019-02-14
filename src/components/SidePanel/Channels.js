@@ -84,7 +84,7 @@ class Channels extends Component {
         {
           channels: loadedChannels
         },
-        this.setFirstChannel()
+        this.setFirstChannel
       );
     });
   };
