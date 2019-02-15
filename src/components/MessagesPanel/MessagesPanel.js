@@ -10,7 +10,11 @@ export default class MessagesPanel extends Component {
     channel: this.props.currentChannel,
     user: this.props.currentUser,
     messages: [],
-    messagesLoading: true
+    messagesLoading: true,
+    numUqUser: '',
+    searchTerm: '',
+    searchLoading: false,
+    searchResults: []
   };
   componentDidMount() {
     const { user, channel } = this.state;
@@ -30,6 +34,18 @@ export default class MessagesPanel extends Component {
         messagesLoading: false
       });
     });
+    this.countUniqueUsers(loadedMessages);
+  };
+  countUniqueUsers = messages => {
+    const uniqueUsers = messages.reduce((acc, message) => {
+      if (!acc.includes(message.user.name)) {
+        acc.push(message.user.name);
+      }
+      return acc;
+    }, []);
+    const pural = uniqueUsers.length > 1 || uniqueUsers.length === 0;
+    const numUqUser = `${uniqueUsers.length} user${pural ? 's' : ''}`;
+    this.setState({ numUqUser });
   };
   displayMessages = messages =>
     messages.length > 0 &&
@@ -40,14 +56,45 @@ export default class MessagesPanel extends Component {
         user={this.state.user}
       />
     ));
+  displayChannelName = channel => (channel ? `#${channel.name}` : '');
+  handelSearchChange = event => {
+    this.setState({ searchTerm: event.target.value, searchLoading: true }, () =>
+      this.handelSearchMessages()
+    );
+  };
+  handelSearchMessages = () => {
+    const channelMessages = [...this.state.messages];
+    const regex = new RegExp(this.state.searchTerm, 'gi');
+    const searchResults = channelMessages.reduce((acc, message) => {
+      if (message.message && message.message.match(regex)) {
+        acc.push(message);
+      }
+      return acc;
+    }, []);
+    this.setState({ searchResults });
+  };
   render() {
-    const { messagesRef, messages, channel, user } = this.state;
+    const {
+      messagesRef,
+      messages,
+      channel,
+      user,
+      numUqUser,
+      searchTerm,
+      searchResults
+    } = this.state;
     return (
       <React.Fragment>
-        <MessageHeader />
+        <MessageHeader
+          channelname={this.displayChannelName(channel)}
+          numUqUser={numUqUser}
+          handelSearchChange={this.handelSearchChange}
+        />
         <Segment>
           <Comment.Group className="messages">
-            {this.displayMessages(messages)}
+            {searchTerm
+              ? this.displayMessages(searchResults)
+              : this.displayMessages(messages)}
           </Comment.Group>
         </Segment>
         <MessageForm

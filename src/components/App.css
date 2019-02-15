@@ -27,3 +27,6 @@ body,
   display: none;
   padding: 1em;
 }
+.menu {
+  padding-bottom: 2em;
+}
