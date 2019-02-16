@@ -14,7 +14,8 @@ export default class MessagesPanel extends Component {
     numUqUser: '',
     searchTerm: '',
     searchLoading: false,
-    searchResults: []
+    searchResults: [],
+    privateChannel: this.props.isPrivateChannel
   };
   componentDidMount() {
     const { user, channel } = this.state;
@@ -56,7 +57,11 @@ export default class MessagesPanel extends Component {
         user={this.state.user}
       />
     ));
-  displayChannelName = channel => (channel ? `#${channel.name}` : '');
+  displayChannelName = channel => {
+    return channel
+      ? `${this.state.privateChannel ? '@' : '#'}${channel.name}`
+      : '';
+  };
   handelSearchChange = event => {
     this.setState({ searchTerm: event.target.value, searchLoading: true }, () =>
       this.handelSearchMessages()
@@ -81,7 +86,8 @@ export default class MessagesPanel extends Component {
       user,
       numUqUser,
       searchTerm,
-      searchResults
+      searchResults,
+      privateChannel
     } = this.state;
     return (
       <React.Fragment>
@@ -89,6 +95,7 @@ export default class MessagesPanel extends Component {
           channelname={this.displayChannelName(channel)}
           numUqUser={numUqUser}
           handelSearchChange={this.handelSearchChange}
+          isPrivateChannel={privateChannel}
         />
         <Segment>
           <Comment.Group className="messages">
@@ -101,6 +108,7 @@ export default class MessagesPanel extends Component {
           messagesRef={messagesRef}
           currentChannel={channel}
           currentUser={user}
+          isPrivateChannel={privateChannel}
         />
       </React.Fragment>
     );

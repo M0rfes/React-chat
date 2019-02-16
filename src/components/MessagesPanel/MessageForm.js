@@ -15,7 +15,8 @@ export default class MessageForm extends Component {
     uploadState: '',
     uploadTask: null,
     storageRef: firebase.storage().ref(),
-    perUploaded: 0
+    perUploaded: 0,
+    privateChannel: this.props.isPrivateChannel
   };
   openModel = () => this.setState({ model: true });
   closeModel = () => this.setState({ model: false });
@@ -63,10 +64,17 @@ export default class MessageForm extends Component {
       });
     }
   };
+  getPath = () => {
+    if (this.state.privateChannel) {
+      return `chat/private-${this.state.channel.id}`;
+    } else {
+      return `chat/public`;
+    }
+  };
   upload = (file, metaData) => {
     const pathToUpload = this.state.channel.id;
     const ref = this.props.messagesRef;
-    const path = `chat/public/${uuidv4()}.jpg`;
+    const path = `${this.getPath()}/${uuidv4()}.jpg`;
     this.setState(
       {
         uploadState: 'uploading',
