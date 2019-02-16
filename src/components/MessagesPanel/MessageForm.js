@@ -40,11 +40,11 @@ export default class MessageForm extends Component {
     return message;
   };
   sendMessage = () => {
-    const { messagesRef } = this.props;
+    const { getMessagesRef } = this.props;
     const { message, channel } = this.state;
     if (message) {
       this.setState({ loading: true });
-      messagesRef
+      getMessagesRef()
         .child(channel.id)
         .push()
         .set(this.createMessage())
@@ -73,7 +73,7 @@ export default class MessageForm extends Component {
   };
   upload = (file, metaData) => {
     const pathToUpload = this.state.channel.id;
-    const ref = this.props.messagesRef;
+    const ref = this.props.getMessagesRef();
     const path = `${this.getPath()}/${uuidv4()}.jpg`;
     this.setState(
       {

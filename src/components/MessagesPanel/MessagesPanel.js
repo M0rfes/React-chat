@@ -15,7 +15,8 @@ export default class MessagesPanel extends Component {
     searchTerm: '',
     searchLoading: false,
     searchResults: [],
-    privateChannel: this.props.isPrivateChannel
+    privateChannel: this.props.isPrivateChannel,
+    privateMessagesRef: firebase.database().ref('privateMessages')
   };
   componentDidMount() {
     const { user, channel } = this.state;
@@ -28,7 +29,8 @@ export default class MessagesPanel extends Component {
   };
   addMessageListener = id => {
     let loadedMessages = [];
-    this.state.messagesRef.child(id).on('child_added', snap => {
+    const ref = this.getMessagesRef();
+    ref.child(id).on('child_added', snap => {
       loadedMessages.push(snap.val());
       this.setState({
         messages: loadedMessages,
@@ -78,6 +80,10 @@ export default class MessagesPanel extends Component {
     }, []);
     this.setState({ searchResults });
   };
+  getMessagesRef = () => {
+    const { messagesRef, privateMessagesRef, privateChannel } = this.state;
+    return privateChannel ? privateMessagesRef : messagesRef;
+  };
   render() {
     const {
       messagesRef,
@@ -109,6 +115,7 @@ export default class MessagesPanel extends Component {
           currentChannel={channel}
           currentUser={user}
           isPrivateChannel={privateChannel}
+          getMessagesRef={this.getMessagesRef}
         />
       </React.Fragment>
     );
