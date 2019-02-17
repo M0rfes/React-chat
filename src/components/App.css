@@ -30,3 +30,19 @@ body,
 .menu {
   padding-bottom: 2em;
 }
+.color_container {
+  position: relative;
+  overflow: hidden;
+  width: 35px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.color_squr {
+  width: 35px;
+  height: 35;
+}
+.color_overlay {
+  width: 85px;
+  height: 35px;
+  transform: rotate(225deg);
+}
