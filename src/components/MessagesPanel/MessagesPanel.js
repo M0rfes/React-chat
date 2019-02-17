@@ -16,14 +16,30 @@ export default class MessagesPanel extends Component {
     searchLoading: false,
     searchResults: [],
     privateChannel: this.props.isPrivateChannel,
-    privateMessagesRef: firebase.database().ref('privateMessages')
+    privateMessagesRef: firebase.database().ref('privateMessages'),
+    isChannelStarred: false,
+    usersRef: firebase.database().ref('users')
   };
   componentDidMount() {
     const { user, channel } = this.state;
     if (channel && user) {
       this.addListener(channel.id);
+      this.addUsersStarListener(channel.id, user.uid);
     }
   }
+  addUsersStarListener = (cid, uid) => {
+    this.state.usersRef
+      .child(uid)
+      .child('starred')
+      .once('value')
+      .then(data => {
+        if (data.val() !== null) {
+          const channelIds = Object.keys(data.val());
+          const preStarred = channelIds.includes(cid);
+          this.setState({ isChannelStarred: preStarred });
+        }
+      });
+  };
   addListener = id => {
     this.addMessageListener(id);
   };
@@ -84,6 +100,28 @@ export default class MessagesPanel extends Component {
     const { messagesRef, privateMessagesRef, privateChannel } = this.state;
     return privateChannel ? privateMessagesRef : messagesRef;
   };
+  handelStar = () => {
+    this.setState(
+      preState => ({
+        isChannelStarred: !preState.isChannelStarred
+      }),
+      () => this.starChannel()
+    );
+  };
+  starChannel = () => {
+    if (this.state.isChannelStarred) {
+      this.state.usersRef.child(`${this.state.user.uid}/starred`).update({
+        [this.state.channel.id]: {
+          ...this.state.channel
+        }
+      });
+    } else {
+      this.state.usersRef
+        .child(`${this.state.user.uid}/starred`)
+        .child(this.state.channel.id)
+        .remove(err => err && console.err(err));
+    }
+  };
   render() {
     const {
       messagesRef,
@@ -93,7 +131,8 @@ export default class MessagesPanel extends Component {
       numUqUser,
       searchTerm,
       searchResults,
-      privateChannel
+      privateChannel,
+      isChannelStarred
     } = this.state;
     return (
       <React.Fragment>
@@ -102,6 +141,8 @@ export default class MessagesPanel extends Component {
           numUqUser={numUqUser}
           handelSearchChange={this.handelSearchChange}
           isPrivateChannel={privateChannel}
+          handelStar={this.handelStar}
+          isChannelStarred={isChannelStarred}
         />
         <Segment>
           <Comment.Group className="messages">

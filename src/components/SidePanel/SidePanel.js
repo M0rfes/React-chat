@@ -16,7 +16,7 @@ export default class SidePanel extends Component {
         style={{ background: '#4c3c4c', forntSize: '1.2rem' }}
       >
         <UserPanel currentUser={currentUser} />
-        <Starred />
+        <Starred currentUser={currentUser} />
         <Channels currentUser={currentUser} />
         <DirectMessages currentUser={currentUser} />
       </Menu>

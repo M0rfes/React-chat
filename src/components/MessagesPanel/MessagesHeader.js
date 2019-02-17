@@ -6,7 +6,9 @@ export default class MessagesHeader extends Component {
       channelname,
       numUqUser,
       handelSearchChange,
-      isPrivateChannel
+      isPrivateChannel,
+      handelStar,
+      isChannelStarred
     } = this.props;
     return (
       <Segment clearing>
@@ -14,7 +16,13 @@ export default class MessagesHeader extends Component {
         <Header fluid="true" floated="left" style={{ marginBottom: 0 }}>
           <span>
             {channelname}
-            {!isPrivateChannel && <Icon name={'star outline'} color="black" />}
+            {!isPrivateChannel && (
+              <Icon
+                onClick={handelStar}
+                name={isChannelStarred ? 'star' : 'star outline'}
+                color={isChannelStarred ? 'yellow' : 'black'}
+              />
+            )}
           </span>
           <Header.Subheader>{numUqUser}</Header.Subheader>
         </Header>
