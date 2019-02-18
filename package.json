@@ -5,6 +5,7 @@
   "dependencies": {
     "emoji-mart": "^2.9.2",
     "firebase": "^5.7.3",
+    "gh-pages": "^2.0.1",
     "md5": "^2.2.1",
     "mime-types": "^2.1.21",
     "moment": "^2.23.0",
@@ -21,11 +22,13 @@
     "semantic-ui-react": "^0.84.0",
     "uuid": "^3.3.2"
   },
+  "homepage": "https:/M0rfes.github.io/React-chat",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
