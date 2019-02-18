@@ -32,8 +32,8 @@ class ColorPanel extends Component {
       this.saveColors(this.state.primary, this.state.secondary);
   };
   componentDidMount() {
-    if (this.state) {
-      this.addListener(this.state.user.ui);
+    if (this.state.user) {
+      this.addListener(this.state.user.uid);
     }
   }
   componentWillUnmount() {
@@ -44,7 +44,9 @@ class ColorPanel extends Component {
   addListener = uid => {
     let userColors = [];
     this.state.usersRef.child(`${uid}/colors`).on('child_added', snap => {
+      console.log(snap);
       userColors = [snap.val(), ...userColors];
+      console.log(userColors);
       this.setState({ userColors });
     });
   };
