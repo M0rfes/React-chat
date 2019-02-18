@@ -4,6 +4,7 @@ import firebase from '../../firebase';
 import MessageHeader from './MessagesHeader';
 import MessageForm from './MessageForm';
 import Message from './Message';
+import Typing from './Typing';
 export default class MessagesPanel extends Component {
   state = {
     messagesRef: firebase.database().ref('messages'),
@@ -18,15 +19,43 @@ export default class MessagesPanel extends Component {
     privateChannel: this.props.isPrivateChannel,
     privateMessagesRef: firebase.database().ref('privateMessages'),
     isChannelStarred: false,
-    usersRef: firebase.database().ref('users')
+    usersRef: firebase.database().ref('users'),
+    typingRef: firebase.database().ref('typing'),
+    typingUsers: [],
+    connectedRef: firebase.database().ref('.info/connected'),
+    listeners: []
   };
   componentDidMount() {
-    const { user, channel } = this.state;
+    const { user, channel, listeners } = this.state;
     if (channel && user) {
+      this.removeListeners(listeners);
       this.addListener(channel.id);
       this.addUsersStarListener(channel.id, user.uid);
     }
   }
+
+  componentWillUnmount() {
+    this.removeListeners(this.state.listeners);
+    this.state.connectedRef.off();
+  }
+  removeListeners = listeners => {
+    listeners.forEach(listener =>
+      listener.ref.child(listener.id).off(listener.event)
+    );
+  };
+  addToListener = (id, ref, event) => {
+    const index = this.state.listeners.findIndex(listener => {
+      return (
+        listener.id === id && listener.ref === ref && listener.event && event
+      );
+    });
+    if (index === -1) {
+      this.setState({
+        listeners: [...this.state.listeners, { id, ref, event }]
+      });
+    }
+  };
+
   addUsersStarListener = (cid, uid) => {
     this.state.usersRef
       .child(uid)
@@ -42,6 +71,40 @@ export default class MessagesPanel extends Component {
   };
   addListener = id => {
     this.addMessageListener(id);
+    this.addTypingListener(id);
+  };
+  addTypingListener = id => {
+    let typingUsers = [];
+    this.state.typingRef.child(id).on('child_added', snap => {
+      if (snap.key !== this.state.user.uid) {
+        typingUsers = [
+          ...typingUsers,
+          {
+            id: snap.key,
+            name: snap.val()
+          }
+        ];
+        this.setState({ typingUsers });
+      }
+    });
+    this.addToListener(id, this.state.typingRef, 'child_added');
+    this.state.typingRef.child(id).on('child_removed', snap => {
+      const index = typingUsers.findIndex(user => user.id === snap.key);
+      if (index !== -1) {
+        typingUsers = typingUsers.filter(user => user.id !== snap.key);
+        this.setState({ typingUsers });
+      }
+    });
+    this.addToListener(id, this.state.typingRef, 'child_removed');
+    this.state.connectedRef.on('value', snap => {
+      if (snap.val() === true) {
+        this.state.typingRef
+          .child(id)
+          .child(this.state.user.uid)
+          .onDisconnect()
+          .remove();
+      }
+    });
   };
   addMessageListener = id => {
     let loadedMessages = [];
@@ -54,6 +117,7 @@ export default class MessagesPanel extends Component {
       });
     });
     this.countUniqueUsers(loadedMessages);
+    this.addToListener(id, ref, 'child_added');
   };
   countUniqueUsers = messages => {
     const uniqueUsers = messages.reduce((acc, message) => {
@@ -122,6 +186,14 @@ export default class MessagesPanel extends Component {
         .remove(err => err && console.err(err));
     }
   };
+  componentDidUpdate() {
+    if (this.messagesEnd) {
+      this.scrollToBottom();
+    }
+  }
+  scrollToBottom = () => {
+    this.messagesEnd.scrollIntoView({ behavior: 'smooth' });
+  };
   render() {
     const {
       messagesRef,
@@ -132,7 +204,8 @@ export default class MessagesPanel extends Component {
       searchTerm,
       searchResults,
       privateChannel,
-      isChannelStarred
+      isChannelStarred,
+      typingUsers
     } = this.state;
     return (
       <React.Fragment>
@@ -149,6 +222,21 @@ export default class MessagesPanel extends Component {
             {searchTerm
               ? this.displayMessages(searchResults)
               : this.displayMessages(messages)}
+            {typingUsers.length > 0 &&
+              typingUsers.map(user => (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '0.2em'
+                  }}
+                  key={user.uid}
+                >
+                  <span className="user_typing">{user.name} is Typing...</span>
+                  <Typing />
+                </div>
+              ))}
+            <div ref={node => (this.messagesEnd = node)} />
           </Comment.Group>
         </Segment>
         <MessageForm
